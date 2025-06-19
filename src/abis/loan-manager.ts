@@ -1,14 +1,24 @@
-export const COLLATERAL_MANAGER_ABI = [
+export const LOAN_MANAGER_ABI = [
   {
     type: "constructor",
     inputs: [
       {
-        name: "_usdcToken",
+        name: "_lendingPool",
         type: "address",
         internalType: "address",
       },
       {
-        name: "_lendingPool",
+        name: "_collateralManager",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_walletFactory",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_usdcToken",
         type: "address",
         internalType: "address",
       },
@@ -30,7 +40,7 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "LIQUIDATION_THRESHOLD",
+    name: "COLLATERAL_RATIO",
     inputs: [],
     outputs: [
       {
@@ -43,7 +53,7 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "MAX_LEVERAGE_RATIO",
+    name: "DEFAULT_DURATION",
     inputs: [],
     outputs: [
       {
@@ -56,7 +66,7 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "MIN_COLLATERAL_RATIO",
+    name: "DEFAULT_INTEREST_RATE",
     inputs: [],
     outputs: [
       {
@@ -69,10 +79,105 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "collateralAmount",
+    name: "MAX_LOAN_AMOUNT",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MIN_LOAN_AMOUNT",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "POOL_RATIO",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "borrowerLoans",
     inputs: [
       {
         name: "",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "calculateTotalDue",
+    inputs: [
+      {
+        name: "loanId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "totalDue",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "collateralManager",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "contract CollateralManager",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getBorrowerLoans",
+    inputs: [
+      {
+        name: "borrower",
         type: "address",
         internalType: "address",
       },
@@ -80,40 +185,115 @@ export const COLLATERAL_MANAGER_ABI = [
     outputs: [
       {
         name: "",
-        type: "uint256",
-        internalType: "uint256",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
     ],
     stateMutability: "view",
   },
   {
     type: "function",
-    name: "collateralInfo",
+    name: "getLoanInfo",
     inputs: [
       {
+        name: "loanId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
         name: "",
+        type: "tuple",
+        internalType: "struct LoanManager.LoanInfo",
+        components: [
+          {
+            name: "borrower",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "loanAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "collateralAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "interestRate",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "duration",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "startTime",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "dueDate",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "repaidAmount",
+            type: "uint256",
+            internalType: "uint256",
+          },
+          {
+            name: "restrictedWallet",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "status",
+            type: "uint8",
+            internalType: "enum LoanManager.LoanStatus",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getLoanStatus",
+    inputs: [
+      {
+        name: "borrower",
         type: "address",
         internalType: "address",
       },
     ],
     outputs: [
       {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
+        name: "status",
+        type: "uint8",
+        internalType: "enum LoanManager.LoanStatus",
       },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "hasActiveLoan",
+    inputs: [
       {
-        name: "borrowedAmount",
-        type: "uint256",
-        internalType: "uint256",
+        name: "borrower",
+        type: "address",
+        internalType: "address",
       },
+    ],
+    outputs: [
       {
-        name: "depositTimestamp",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "isActive",
+        name: "hasActive",
         type: "bool",
         internalType: "bool",
       },
@@ -122,145 +302,22 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "depositCollateral",
+    name: "initiateLoan",
     inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
-      },
       {
         name: "desiredLoanAmount",
         type: "uint256",
         internalType: "uint256",
       },
     ],
-    outputs: [],
+    outputs: [
+      {
+        name: "loanId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
     stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "getCollateralRatio",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getMaxBorrowable",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "getPositionInfo",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "collateral",
-        type: "uint256",
-        internalType: "uint256",
-      },
-      {
-        name: "borrowed",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "isLiquidatable",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "isPositionSafe",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
-  },
-  {
-    type: "function",
-    name: "isUnderCollateralized",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [
-      {
-        name: "isUnder",
-        type: "bool",
-        internalType: "bool",
-      },
-    ],
-    stateMutability: "view",
   },
   {
     type: "function",
@@ -277,26 +334,77 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "liquidatePosition",
+    name: "loans",
     inputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "borrower",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "loanAmount",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "collateralAmount",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "interestRate",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "duration",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "startTime",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "dueDate",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "repaidAmount",
+        type: "uint256",
+        internalType: "uint256",
+      },
       {
         name: "restrictedWallet",
         type: "address",
         internalType: "address",
       },
+      {
+        name: "status",
+        type: "uint8",
+        internalType: "enum LoanManager.LoanStatus",
+      },
     ],
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
   },
   {
     type: "function",
-    name: "loanManager",
+    name: "nextLoanId",
     inputs: [],
     outputs: [
       {
         name: "",
-        type: "address",
-        internalType: "address",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
     stateMutability: "view",
@@ -316,19 +424,6 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "releaseCollateral",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
     name: "renounceOwnership",
     inputs: [],
     outputs: [],
@@ -336,23 +431,15 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "setLoanManager",
+    name: "repayLoan",
     inputs: [
       {
-        name: "_loanManager",
-        type: "address",
-        internalType: "address",
+        name: "loanId",
+        type: "uint256",
+        internalType: "uint256",
       },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
-    name: "submitCollateral",
-    inputs: [
       {
-        name: "amount",
+        name: "repayAmount",
         type: "uint256",
         internalType: "uint256",
       },
@@ -362,14 +449,47 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "totalBorrowed",
-    inputs: [
+    name: "totalActiveLoans",
+    inputs: [],
+    outputs: [
       {
         name: "",
-        type: "address",
-        internalType: "address",
+        type: "uint256",
+        internalType: "uint256",
       },
     ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalDefaultedLoans",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalLoansIssued",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "totalLoansRepaid",
+    inputs: [],
     outputs: [
       {
         name: "",
@@ -394,24 +514,6 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "updateBorrowedAmount",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        internalType: "uint256",
-      },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "function",
     name: "usdcToken",
     inputs: [],
     outputs: [
@@ -425,110 +527,116 @@ export const COLLATERAL_MANAGER_ABI = [
   },
   {
     type: "function",
-    name: "validateCollateral",
-    inputs: [
-      {
-        name: "user",
-        type: "address",
-        internalType: "address",
-      },
-    ],
+    name: "walletFactory",
+    inputs: [],
     outputs: [
       {
-        name: "isValid",
-        type: "bool",
-        internalType: "bool",
+        name: "",
+        type: "address",
+        internalType: "contract RestrictedWalletFactory",
       },
     ],
     stateMutability: "view",
   },
   {
-    type: "function",
-    name: "withdrawCollateral",
+    type: "event",
+    name: "LoanDefaulted",
     inputs: [
       {
-        name: "restrictedWallet",
-        type: "address",
-        internalType: "address",
-      },
-      {
-        name: "amount",
+        name: "loanId",
         type: "uint256",
+        indexed: true,
         internalType: "uint256",
       },
-    ],
-    outputs: [],
-    stateMutability: "nonpayable",
-  },
-  {
-    type: "event",
-    name: "BorrowedAmountUpdated",
-    inputs: [
       {
-        name: "restrictedWallet",
+        name: "borrower",
         type: "address",
         indexed: true,
         internalType: "address",
-      },
-      {
-        name: "newAmount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
     ],
     anonymous: false,
   },
   {
     type: "event",
-    name: "CollateralDeposited",
+    name: "LoanFullyRepaid",
     inputs: [
       {
-        name: "restrictedWallet",
+        name: "loanId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "borrower",
         type: "address",
         indexed: true,
         internalType: "address",
-      },
-      {
-        name: "amount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
     ],
     anonymous: false,
   },
   {
     type: "event",
-    name: "CollateralReleased",
+    name: "LoanInitiated",
     inputs: [
       {
-        name: "restrictedWallet",
+        name: "loanId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "borrower",
         type: "address",
         indexed: true,
         internalType: "address",
       },
       {
-        name: "amount",
+        name: "loanAmount",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
+      },
+      {
+        name: "collateralAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "restrictedWallet",
+        type: "address",
+        indexed: false,
+        internalType: "address",
       },
     ],
     anonymous: false,
   },
   {
     type: "event",
-    name: "CollateralWithdrawn",
+    name: "LoanRepaid",
     inputs: [
       {
-        name: "restrictedWallet",
+        name: "loanId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "borrower",
         type: "address",
         indexed: true,
         internalType: "address",
       },
       {
-        name: "amount",
+        name: "repaidAmount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "remainingBalance",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
@@ -551,31 +659,6 @@ export const COLLATERAL_MANAGER_ABI = [
         type: "address",
         indexed: true,
         internalType: "address",
-      },
-    ],
-    anonymous: false,
-  },
-  {
-    type: "event",
-    name: "PositionLiquidated",
-    inputs: [
-      {
-        name: "restrictedWallet",
-        type: "address",
-        indexed: true,
-        internalType: "address",
-      },
-      {
-        name: "collateralAmount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
-      },
-      {
-        name: "debtAmount",
-        type: "uint256",
-        indexed: false,
-        internalType: "uint256",
       },
     ],
     anonymous: false,
@@ -620,5 +703,5 @@ export const COLLATERAL_MANAGER_ABI = [
   },
 ] as const;
 
-export const COLLATERAL_MANAGER_ADDRESS =
-  "0x23C369A4991a477E4B9DD13F179b2e68203AbC1D";
+export const LOAN_MANAGER_ADDRESS =
+  "0x7364EeB345989C757616988B70976BBa163B7571";

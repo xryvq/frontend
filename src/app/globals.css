@@ -1,26 +1,25 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Simple PoC - Black & Teal Only */
+@theme {
+  /* Background Colors */
+  --color-black: #0d0d0d;              /* Background utama */
+  --color-dark-gray: #1c1c1e;          /* Cards/containers */
+  
+  /* Teal Scale */
+  --color-teal-600: #2fd0c7;           /* Primary buttons/CTA */
+  --color-teal-500: #3ab0a2;           /* Hover states */
+  --color-teal-400: #5dd4cb;           /* Active/selected states */
+  --color-teal-300: #7dddd6;           /* Highlights */
+  --color-teal-200: #a3e8e3;           /* Success backgrounds */
+  
+  /* Text Colors */
+  --color-white: #ffffff;              /* Primary text */
+  --color-gray-300: #d1d5db;           /* Secondary text */
+  --color-gray-400: #9ca3af;           /* Muted text */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* Body styling */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-black text-white;
 }

@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseUnits } from "viem";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { parseUnits, formatUnits } from "viem";
 import { MOCK_USDC_ABI, MOCK_USDC_ADDRESS } from "@/abis/mock-usdc";
+import { useUserBalances } from '@/hooks/useContractReads';
+import { CONTRACTS, ABIS, PROTOCOL_CONSTANTS } from '@/config/contracts';
 
 export default function FaucetPage() {
-  const [amount, setAmount] = useState("100");
+  const [amount, setAmount] = useState("1000");
   const [isLoading, setIsLoading] = useState(false);
   
   const { address, isConnected } = useAccount();
@@ -17,16 +19,29 @@ export default function FaucetPage() {
     hash,
   });
 
+  // Read user's current USDC balance
+  const { data: usdcBalance } = useReadContract({
+    address: MOCK_USDC_ADDRESS,
+    abi: MOCK_USDC_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    }
+  });
+
+  const userBalances = useUserBalances(address);
+
   const handleMint = async () => {
     if (!address || !amount) return;
     
     try {
       setIsLoading(true);
       
-      // Convert amount to wei (USDC has 18 decimals in this mock)
-      const amountInWei = parseUnits(amount, 18);
+      // Convert amount to wei (USDC has 6 decimals)
+      const amountInWei = parseUnits(amount, 6);
       
-      writeContract({
+      await writeContract({
         address: MOCK_USDC_ADDRESS,
         abi: MOCK_USDC_ABI,
         functionName: "mint",
@@ -41,148 +56,124 @@ export default function FaucetPage() {
 
   const presetAmounts = ["100", "500", "1000", "5000"];
 
+  // Format balance for display
+  const formattedBalance = usdcBalance ? formatUnits(usdcBalance, 6) : "0";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            USDC Faucet
-          </h1>
-          <p className="text-gray-600">
-            Dapatkan Mock USDC gratis untuk testing
-          </p>
-        </div>
-
-        {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 space-y-6">
-          {/* Connect Wallet */}
-          <div className="flex justify-center">
-            <ConnectButton />
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <header className="border-b border-dark-gray">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <a href="/" className="hover:opacity-80 transition-opacity">
+                <h1 className="text-3xl font-bold text-teal-600">Levra Faucet</h1>
+                <p className="text-gray-400 text-sm">Get test USDC tokens</p>
+              </a>
+            </div>
+            <div className="flex items-center gap-4">
+              <a
+                href="/deposit-withdraw"
+                className="px-4 py-2 bg-teal-900 text-teal-300 rounded-lg hover:bg-teal-800 transition-colors text-sm"
+              >
+                Deposit & Withdraw
+              </a>
+              <a
+                href="/borrow"
+                className="px-4 py-2 bg-teal-900 text-teal-300 rounded-lg hover:bg-teal-800 transition-colors text-sm"
+              >
+                Borrow
+              </a>
+              <ConnectButton />
+            </div>
           </div>
+        </div>
+      </header>
 
-          {isConnected && (
-            <>
-              {/* Amount Input */}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Jumlah USDC
-                </label>
-                <div className="relative">
+      <div className="container mx-auto px-4 py-8">
+        {isConnected ? (
+          <div className="max-w-md mx-auto">
+            {/* Current Balance */}
+            <div className="bg-dark-gray border border-gray-800 rounded-xl p-6 mb-6">
+              <h3 className="text-lg font-medium text-white mb-4">Current Balance</h3>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300">Mock USDC:</span>
+                <span className="text-2xl font-bold text-white">
+                  {userBalances.isLoading ? '...' : Number(userBalances.usdcBalance).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Mint Interface */}
+            <div className="bg-dark-gray border border-gray-800 rounded-xl p-6">
+              <h3 className="text-lg font-medium text-white mb-6">Mint Test USDC</h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Amount to Mint
+                  </label>
                   <input
                     type="number"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Masukkan jumlah"
-                    min="1"
-                    max="10000"
+                    placeholder="1000"
+                    className="w-full bg-black border border-gray-700 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                   />
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-gray-500 text-sm">USDC</span>
-                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Enter the amount of test USDC you want to mint
+                  </p>
                 </div>
-              </div>
 
-              {/* Preset Amounts */}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  Jumlah Cepat
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {presetAmounts.map((preset) => (
+                {/* Quick Amount Buttons */}
+                <div className="grid grid-cols-3 gap-2">
+                  {['100', '1000', '10000'].map((amount) => (
                     <button
-                      key={preset}
-                      onClick={() => setAmount(preset)}
-                      className={`px-3 py-2 text-sm rounded-lg border transition-colors ${
-                        amount === preset
-                          ? "bg-blue-500 text-white border-blue-500"
-                          : "bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100"
-                      }`}
+                      key={amount}
+                      onClick={() => setAmount(amount)}
+                      className="py-2 px-4 bg-black border border-gray-700 text-gray-300 rounded-lg hover:border-teal-500 hover:text-teal-400 transition-colors"
                     >
-                      {preset}
+                      {amount}
                     </button>
                   ))}
                 </div>
-              </div>
 
-              {/* Mint Button */}
-              <button
-                onClick={handleMint}
-                disabled={!amount || isPending || isConfirming || isLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {isPending || isConfirming || isLoading
-                  ? "Memproses..."
-                  : `Mint ${amount} USDC`}
-              </button>
+                {/* Mint Button */}
+                <button
+                  onClick={handleMint}
+                  disabled={isPending || isConfirming || !amount}
+                  className="w-full bg-teal-600 hover:bg-teal-500 disabled:bg-gray-600 disabled:cursor-not-allowed text-black font-medium py-3 rounded-xl transition-colors"
+                >
+                  {isPending || isConfirming ? 'Minting...' : `Mint ${amount} USDC`}
+                </button>
 
-              {/* Status Messages */}
-              {hash && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="text-sm text-blue-800">
-                    {isConfirming && (
-                      <p>⏳ Menunggu konfirmasi transaksi...</p>
-                    )}
-                    {isConfirmed && (
-                      <p>✅ Transaksi berhasil! USDC telah di-mint ke wallet Anda.</p>
-                    )}
-                  </div>
-                  <div className="mt-2">
-                    <a
-                      href={`https://sepolia.arbiscan.io/tx/${hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm underline"
-                    >
-                      Lihat di Explorer →
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-sm text-red-800">
-                    ❌ Error: {error.message}
+                {/* Info */}
+                <div className="bg-teal-200/10 border border-teal-200/30 rounded-xl p-4">
+                  <p className="text-teal-300 text-sm">
+                    ℹ️ This is test USDC for the Arbitrum Sepolia network. 
+                    Use it to test deposits and withdrawals in the Levra protocol.
                   </p>
                 </div>
-              )}
-
-              {/* Contract Info */}
-              <div className="bg-gray-50 rounded-lg p-4 text-sm">
-                <h3 className="font-medium text-gray-700 mb-2">Info Contract:</h3>
-                <div className="space-y-1 text-gray-600">
-                  <p>Network: Arbitrum Sepolia</p>
-                  <p>Contract: {MOCK_USDC_ADDRESS}</p>
-                  <p className="break-all">Address: {address}</p>
-                </div>
               </div>
-            </>
-          )}
-
-          {!isConnected && (
-            <div className="text-center py-8">
-              <div className="text-gray-500 mb-4">
-                <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <p className="text-gray-600">
-                Silakan hubungkan wallet Anda untuk menggunakan faucet
-              </p>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8 text-sm text-gray-500">
-          <p>
-            Faucet ini hanya untuk testing di Arbitrum Sepolia testnet.
-            <br />
-            Token tidak memiliki nilai ekonomi.
-          </p>
-        </div>
+            {/* Navigation */}
+            <div className="mt-6 text-center">
+              <a
+                href="/"
+                className="inline-flex items-center px-4 py-2 text-teal-400 hover:text-teal-300 transition-colors"
+              >
+                ← Back to Home
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold text-white mb-4">Connect Your Wallet</h2>
+            <p className="text-gray-400 mb-8">Connect your wallet to mint test USDC tokens</p>
+            <ConnectButton />
+          </div>
+        )}
       </div>
     </div>
   );
